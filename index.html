@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Inside a $35 Dashcam · V851S Reference Design</title>
+    <meta name="description" content="An interactive 3D teardown of a V851S reference design for a 1440p dashcam in the $35 class, with every part tagged by its source." />
+    <!-- Share cards (X, LinkedIn, chat apps). The image needs an absolute URL. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://teardown.martinkuai.com/" />
+    <meta property="og:title" content="What's inside a $35 dashcam? An interactive 3D teardown" />
+    <meta property="og:description" content="A V851S dashcam reference design you can take apart in the browser. Every part is tagged with its source." />
+    <meta property="og:image" content="https://teardown.martinkuai.com/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+    <link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600&display=swap" rel="stylesheet" />
+    <!-- Chinese text: Noto Sans SC in real weights instead of the system Hei face's faked bold. Loaded without
+         blocking the page, so a reader who can't reach Google Fonts simply gets the system face. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <script>
+      // A Chinese reader shouldn't see the English copy flash before src/i18n.ts swaps it in.
+      try {
+        var q = new URLSearchParams(location.search).get('lang');
+        var l = q || localStorage.getItem('teardown-lang') || navigator.language.toLowerCase().slice(0, 2);
+        if (l === 'zh') document.documentElement.classList.add('is-translating');
+      } catch (e) {}
+    </script>
+    <script type="module" crossorigin src="/assets/index-Cwp0gUhL.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CyroSPw6.css">
+  </head>
+  <body>
+    <canvas id="scene" data-i18n-label="scene" aria-label="3D model of a dashcam. Click a part to read about it."></canvas>
+    <svg id="leaders" aria-hidden="true"></svg>
+
+    <header class="topbar">
+      <a class="topbar__name" href="https://martinkuai.com" target="_blank" rel="noopener">Martin Kuai</a>
+      <div class="topbar__end">
+        <div class="lang" role="group" data-i18n-label="lang" aria-label="Language">
+          <button type="button" data-lang="en" lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="zh" lang="zh-CN" aria-pressed="false">中文</button>
+        </div>
+        <a class="button button--quiet" data-cta href="https://contra.com/martin_k_ned4llz9" target="_blank" rel="noopener"
+          ><span class="cta-long" data-i18n="work">Work with me</span><span class="cta-short" data-i18n="work-short">Hire me</span></a
+        >
+      </div>
+    </header>
+
+    <!-- The text column: the page on the right that the model fades into. -->
+    <div class="column" aria-hidden="true"></div>
+
+    <nav class="progress" data-i18n-label="chapters" aria-label="Chapters"></nav>
+
+    <div class="viewer-bar">
+      <p class="viewer-bar__hint">
+        <span class="hint-mouse" data-i18n="hint-long">Drag to rotate · click a part for details · double-click to reset</span>
+        <span class="hint-mouse hint-mouse--short" data-i18n="hint-short">Drag to rotate · click a part for details</span>
+        <span class="hint-touch" data-i18n="hint-touch">Swipe sideways to rotate · tap a part for details</span>
+      </p>
+      <div class="zoom" role="group" data-i18n-label="zoom" aria-label="Zoom">
+        <button class="zoom__step" type="button" data-zoom="-1" data-i18n-label="zoom-out" aria-label="Zoom out">−</button>
+        <input id="zoom" class="range" type="range" min="60" max="250" step="1" value="100" data-i18n-label="zoom" aria-label="Zoom" />
+        <button class="zoom__step" type="button" data-zoom="1" data-i18n-label="zoom-in" aria-label="Zoom in">+</button>
+        <output id="zoom-value" for="zoom">100%</output>
+        <!-- Puts rotation and zoom back to the default: the same as a double-click, for touch and keyboard. -->
+        <button class="zoom__step zoom__reset" id="reset-view" type="button" data-i18n-label="reset" aria-label="Reset view">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+            <path d="M4.5 10a5.5 5.5 0 1 0 1.7-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <path d="M5.6 2.8v3.6h3.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Part labels on the model. A faded label is hidden from the keyboard and screen readers too. -->
+    <div id="labels"></div>
+
+    <main id="story">
+      <section class="step" data-step="0" data-nav="Overview">
+        <div class="copy copy--intro">
+          <p class="kicker" data-i18n="kicker">V851S reference design · $35 class</p>
+          <h1 data-i18n="h1"><span class="h1-line">What’s inside a</span> <span class="h1-line">$35 dashcam?</span></h1>
+          <p class="lead" data-i18n="lead">
+            A 1440p dashcam designed around Allwinner’s V851S camera chip and modelled part by part, down to the capacitors. Each part
+            is tagged with its basis: the chip’s datasheet, the open-source TinyVision board, or a design choice.
+          </p>
+          <!-- The legend for the source dots on the model's labels, the parts list and the part card. -->
+          <ul class="legend" data-i18n-label="sources" aria-label="Sources">
+            <li class="basis basis--datasheet" data-i18n="src-datasheet">Datasheet</li>
+            <li class="basis basis--reference" data-i18n="src-reference">Reference board</li>
+            <li class="basis basis--design" data-i18n="src-design">Design choice</li>
+          </ul>
+          <!-- How to use the page. The gesture line only shows on phones, where the toolbar has no room for a hint. -->
+          <p class="cue">
+            <span class="cue__scroll" data-i18n="cue-scroll">Scroll to take it apart</span>
+            <span class="cue__gesture for-mouse" data-i18n="cue-mouse">Drag to rotate, click a part for details</span>
+            <span class="cue__gesture for-touch" data-i18n="cue-touch">Swipe sideways to rotate, tap a part for details</span>
+          </p>
+        </div>
+      </section>
+
+      <section class="step" data-step="1" data-nav="Shell">
+        <div class="copy">
+          <h2 data-i18n="s1-h">Two halves, four&nbsp;screws</h2>
+          <p data-i18n="s1-p">
+            The lens and vents face the road and the screen faces you; the buttons, USB-C and microSD sit on the sides. Everything
+            that matters is on one board smaller than a credit card.
+          </p>
+        </div>
+      </section>
+
+      <section class="step" data-step="2" data-nav="Lens + sensor">
+        <div class="copy">
+          <h2 data-i18n="s2-h">Resolution, set by the image&nbsp;processor</h2>
+          <p data-i18n="s2-p">
+            An M12 lens sits over a CMOS sensor on its own small board, linked to the main board by a MIPI CSI flex cable. In online
+            mode the V851S image processor (ISP) handles up to 2560&nbsp;×&nbsp;1440, so this design records 1440p.
+          </p>
+        </div>
+      </section>
+
+      <section class="step" data-step="3" data-nav="The V851S">
+        <div class="copy">
+          <h2 data-i18n="s3-h">A camera chip in a 9&nbsp;mm&nbsp;square</h2>
+          <p data-i18n="s3-p">
+            One chip runs the whole camera: a Cortex-A7 core runs Linux beside a RISC-V core, a small NPU can run detection models and
+            a hardware encoder writes H.265 or H.264. The datasheet rates the chip for −20 to 75&nbsp;°C ambient.
+          </p>
+        </div>
+      </section>
+
+      <section class="step" data-step="4" data-nav="Memory + storage">
+        <div class="copy">
+          <h2 data-i18n="s4-h">The memory is inside the&nbsp;chip</h2>
+          <p data-i18n="s4-p">
+            The V851S carries 64&nbsp;MB of DDR2 in the same package as the processor, so the board needs no separate memory chip. The
+            model draws the package see-through, with one block for the processor and one for the memory: a diagram, not a decapped
+            chip. Firmware sits in a small SD NAND chip; video goes to the microSD card.
+          </p>
+        </div>
+      </section>
+
+      <section class="step" data-step="5" data-nav="Power">
+        <div class="copy">
+          <h2 data-i18n="s5-h">Five rails from one USB-C&nbsp;port</h2>
+          <p data-i18n="s5-p">
+            The chip’s core, its memory, its IO and the camera sensor need five voltages between them, all made on the board from
+            5&nbsp;V; a sixth, 1.8&nbsp;V, comes from an LDO inside the chip. The two buck converters and two LDOs, feedback resistors
+            included, are the reference board’s. Input protection and the switch-over to the supercaps were added for the car.
+          </p>
+        </div>
+      </section>
+
+      <section class="step" data-step="6" data-nav="Screen + supercaps">
+        <div class="copy">
+          <h2 data-i18n="s6-h">Two choices the chip leaves to&nbsp;you</h2>
+          <p data-i18n="s6-p">
+            The V851S can drive a small screen; its sibling, the V851SE, has no display output, so picking the chip settles whether
+            there is a screen at all. The open-source reference board is a V851SE board, so the screen is this design’s own. Backup
+            power comes from two supercapacitors in series, which cope with heat better than a lithium cell.
+          </p>
+        </div>
+      </section>
+
+      <section class="step" data-step="7" data-nav="Part sources">
+        <div class="copy copy--wide">
+          <h2 data-i18n="s7-h">Datasheet, reference board, design&nbsp;choice</h2>
+          <ul class="bom" id="bom"></ul>
+          <p class="note" data-i18n="s7-note">Click a part to fly to it, or click any component on the board.</p>
+        </div>
+      </section>
+
+      <section class="step" data-step="8" data-nav="Take it apart">
+        <div class="copy copy--outro">
+          <h2 data-i18n="s8-h">Now you take it&nbsp;apart</h2>
+          <label class="slider">
+            <span data-i18n="assembled">Assembled</span>
+            <input id="explode" class="range" type="range" min="0" max="100" value="100" data-i18n-label="explode" aria-label="How far apart the parts are" />
+            <span data-i18n="apart">Apart</span>
+          </label>
+          <p class="note" data-i18n="sources">
+            Sources: the <a data-source="allwinner" href="#" target="_blank" rel="noopener">Allwinner V851S</a> datasheet (v1.2) and
+            the schematic and BOM of the open-source <a data-source="tinyvision" href="#" target="_blank" rel="noopener">TinyVision
+            board</a>, built on the V851SE.
+          </p>
+          <p class="credit" data-i18n="credit">
+            I build launch pages and interactive demos like this one for hardware and AI products.
+          </p>
+          <a class="button" data-cta href="https://contra.com/martin_k_ned4llz9" target="_blank" rel="noopener" data-i18n="work">Work with me</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- Non-modal: the model stays live beside it. Long content scrolls inside the body; the close button stays put. -->
+    <aside id="part-card" class="part-card" role="dialog" aria-modal="false" aria-labelledby="part-name" hidden>
+      <button class="part-card__close" type="button" data-i18n-label="close" aria-label="Close">×</button>
+      <div class="part-card__body">
+        <h3 id="part-name" tabindex="-1"></h3>
+        <p class="part-card__meta" id="part-kicker"></p>
+        <dl>
+          <dt id="part-what-label">What it does</dt>
+          <dd id="part-what"></dd>
+          <dt id="part-why-label">Worth knowing</dt>
+          <dd id="part-why"></dd>
+          <dt id="part-board-label" hidden>On the reference board</dt>
+          <dd id="part-board" hidden></dd>
+        </dl>
+        <div class="part-card__spec">
+          <span id="part-spec-label">Spec</span>
+          <strong id="part-spec"></strong>
+        </div>
+        <p class="part-card__hint" data-i18n="card-hint">Drag to look around. <kbd>Esc</kbd> closes.</p>
+      </div>
+    </aside>
+
+  </body>
+</html>

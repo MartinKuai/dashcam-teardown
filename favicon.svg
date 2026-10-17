@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- A dashcam seen from the front: ink body, paper lens ring, vermilion recording light. -->
+  <rect x="3" y="11" width="58" height="42" rx="11" fill="#16140f"/>
+  <circle cx="38" cy="32" r="14" fill="#f4f1eb"/>
+  <circle cx="38" cy="32" r="8.5" fill="#16140f"/>
+  <circle cx="35" cy="29" r="2.6" fill="#f4f1eb" opacity=".6"/>
+  <circle cx="14" cy="21" r="4.2" fill="#e0442b"/>
+</svg>
