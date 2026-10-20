@@ -1,0 +1,1261 @@
+/*
+ * Layout: the model lives in a viewer on the left; the story is a paper-coloured text column on
+ * the right that the model fades into. No boxes around the text: the column is the page.
+ *
+ * Colour: warm paper, ink and one vermilion, the same system as the Contra cover series
+ * (#F2EEE6 / #141311 / #E0442B). Vermilion only marks where you are and what you picked.
+ * The other colour on the page carries data: each part's source (datasheet, reference board,
+ * design choice) has its own hue, shown as a dot on the model's labels, the parts list and
+ * the part card, with a legend under the opening paragraph.
+ */
+:root {
+  --bg: #f4f1eb;
+  --surface: #e8e3d9;
+  --ink: #16140f;
+  --muted: #69635a;
+  --rule: #d3ccbf;
+  --dot: #c8c0b2;
+  --accent: #e0442b;
+  --accent-ink: #ffffff;
+  --src-datasheet: #2f5ea8;
+  --src-reference: #2b7a52;
+  --src-design: #b8741a;
+  /* On the black part card, tooltips and label pills. */
+  --on-ink: #fbfaf7;
+  --on-ink-muted: #a9a398;
+  --on-ink-surface: #2a2722;
+  --src-datasheet-on-ink: #93b4ee;
+  --src-reference-on-ink: #7fc9a1;
+  --src-design-on-ink: #e9b868;
+
+  /* Switzer sets the Latin text and numbers; Chinese falls through to Noto Sans SC, then the system's Hei face. */
+  --font: 'Switzer', 'Noto Sans SC', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei',
+    'Noto Sans CJK SC', 'Source Han Sans SC', 'Helvetica Neue', Arial, sans-serif;
+
+  --step-small: 13px;
+  --step-body: clamp(16px, 0.95rem + 0.15vw, 17px);
+  --step-lead: clamp(18px, 1rem + 0.35vw, 20px);
+  --step-head: clamp(26px, 1rem + 1vw, 34px);
+
+  /* Keep in sync with columnWidth() in main.ts. */
+  --column: clamp(400px, 36vw, 720px);
+  --pad: clamp(32px, 3.4vw, 64px);
+  --fade: 120px;
+  --gutter: clamp(16px, 2.2vw, 32px);
+
+  /* Notches and home indicators (the page sets viewport-fit=cover). */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--bg);
+}
+
+/* Set by the inline script in index.html until the Chinese copy is in place. */
+html.is-translating body {
+  visibility: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--step-body);
+  line-height: 1.5;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Dragging the model must not select the text it passes over. */
+body:has(#scene:active) {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.07em;
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+/* ---------- The text column ---------- */
+
+.column {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: calc(var(--column) + var(--fade));
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--bg) var(--fade));
+  transition: opacity 0.5s ease;
+}
+
+/* Inspecting a part: the column steps aside and the viewer takes the whole screen. */
+body.is-focused .column {
+  opacity: 0;
+}
+
+#leaders,
+#labels {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---------- Source colours: one hue per source, as a dot ---------- */
+
+.basis--datasheet {
+  --src: var(--src-datasheet);
+}
+.basis--reference {
+  --src: var(--src-reference);
+}
+.basis--design {
+  --src: var(--src-design);
+}
+.label--datasheet,
+.part-card__meta[data-basis='datasheet'] {
+  --src: var(--src-datasheet-on-ink);
+}
+.label--reference,
+.part-card__meta[data-basis='reference'] {
+  --src: var(--src-reference-on-ink);
+}
+.label--design,
+.part-card__meta[data-basis='design'] {
+  --src: var(--src-design-on-ink);
+}
+
+.label::before,
+.basis::before,
+.part-card__meta::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--src);
+}
+
+/* A source tag: in the parts list, and as the legend under the opening paragraph. */
+.basis {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--step-small);
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 5px 11px 5px 9px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+/* ---------- Labels on the model ---------- */
+
+.label {
+  appearance: none;
+  margin: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 500 var(--step-small) / 1 var(--font);
+  color: var(--on-ink);
+  background: var(--ink);
+  white-space: nowrap;
+  padding: 8px 12px 8px 10px;
+  border: 0;
+  border-radius: 999px;
+  transition: opacity 0.25s ease, background-color 0.15s ease;
+  will-change: transform, opacity;
+}
+
+.label.is-live {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.label.is-live:hover,
+.label.is-live:focus-visible {
+  background: var(--accent);
+  outline: none;
+}
+
+.label.is-live:hover::before,
+.label.is-live:focus-visible::before {
+  background: var(--accent-ink);
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: calc(18px + var(--safe-top)) calc(var(--gutter) + var(--safe-right)) 18px calc(var(--gutter) + var(--safe-left));
+  pointer-events: none;
+}
+
+.topbar__name {
+  font-weight: 600;
+  font-size: var(--step-body);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.topbar__end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+/* The top bar's call to action shortens on the narrowest phones; the end-of-story one never does. */
+.cta-short {
+  display: none;
+}
+
+@media (max-width: 380px) {
+  .topbar .cta-long {
+    display: none;
+  }
+  .topbar .cta-short {
+    display: inline;
+  }
+}
+
+/* Small controls keep their look but get a larger invisible hit area for fingers. */
+.lang button,
+.zoom__step {
+  position: relative;
+}
+
+.lang button::after,
+.zoom__step::after {
+  content: '';
+  position: absolute;
+  inset: -6px -4px;
+}
+
+/* Language switch: a two-way segmented control, the current language on a paper chip. */
+.lang {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.lang button {
+  appearance: none;
+  border: 0;
+  min-width: 44px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: 500 var(--step-small) / 1 var(--font);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.lang button:hover {
+  color: var(--ink);
+}
+
+.lang button[aria-pressed='true'] {
+  background: var(--bg);
+  color: var(--ink);
+  cursor: default;
+}
+
+/* The end-of-story call to action: solid ink. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 500;
+  font-size: var(--step-body);
+  text-decoration: none;
+  white-space: nowrap;
+  pointer-events: auto;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.button:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+/* In the top bar it stays quiet: an ink outline that fills on hover, so the model leads. */
+.button--quiet {
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.button--quiet:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* ---------- Chapter navigation ---------- */
+
+.progress {
+  position: fixed;
+  left: var(--gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 26px hit area around an 8px dot; the tip says where the dot goes. */
+.progress button {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  margin-left: -9px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.progress button::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.progress button:hover::before,
+.progress button:focus-visible::before {
+  background: var(--ink);
+  transform: scale(1.25);
+}
+
+.progress button[aria-current='true']::before {
+  background: var(--accent);
+  transform: scale(1.4);
+}
+
+.progress__tip {
+  position: absolute;
+  left: 30px;
+  top: 50%;
+  transform: translate(-6px, -50%);
+  display: grid;
+  gap: 2px;
+  width: max-content;
+  max-width: 280px;
+  padding: 10px 14px 11px;
+  border-radius: 14px;
+  background: var(--ink);
+  color: var(--on-ink);
+  text-align: left;
+  font-size: var(--step-small);
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.progress__tip strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.progress__tip span {
+  color: var(--on-ink-muted);
+}
+
+.progress button:hover .progress__tip,
+.progress button:focus-visible .progress__tip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* ---------- Viewer toolbar: hint and zoom, under the model ---------- */
+
+.viewer-bar {
+  position: fixed;
+  bottom: calc(22px + var(--safe-bottom));
+  left: calc((100vw - var(--column)) / 2);
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 6px 8px 6px 20px;
+  border-radius: 999px;
+  background: var(--surface);
+  white-space: nowrap;
+  transition: left 0.5s ease;
+}
+
+body.is-focused .viewer-bar {
+  left: 50vw;
+}
+
+.viewer-bar__hint {
+  font-size: var(--step-small);
+  color: var(--muted);
+}
+
+.hint-mouse--short,
+.hint-touch {
+  display: none;
+}
+
+@media (max-width: 1280px) {
+  .hint-mouse {
+    display: none;
+  }
+  .hint-mouse--short {
+    display: inline;
+  }
+}
+
+@media (hover: none) {
+  .hint-mouse,
+  .hint-mouse--short {
+    display: none;
+  }
+  .hint-touch {
+    display: inline;
+  }
+}
+
+/* Instructions that depend on the input: a mouse (hover) or a finger (no hover). */
+.for-touch {
+  display: none;
+}
+
+@media (hover: none) {
+  .for-mouse {
+    display: none;
+  }
+  .for-touch {
+    display: block;
+  }
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoom__step {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 500 18px/1 var(--font);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.zoom__reset {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.zoom__step:hover {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.zoom .range {
+  width: 132px;
+}
+
+.zoom output {
+  min-width: 44px;
+  font-size: var(--step-small);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding-right: 8px;
+}
+
+/* ---------- Range sliders (zoom and explode share one look) ---------- */
+
+.range {
+  --fill: 50%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--ink) var(--fill), var(--rule) var(--fill));
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--ink);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.range:hover::-webkit-slider-thumb,
+.range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--accent);
+  transform: scale(1.12);
+}
+
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+
+.range::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+
+.range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--ink);
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 6px 2px;
+  border-radius: 4px;
+  background: var(--on-ink-surface);
+  font: inherit;
+  line-height: 1;
+}
+
+/* ---------- Story, set in the column ---------- */
+
+#story {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.step {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 104px var(--pad);
+}
+
+.copy {
+  pointer-events: auto;
+  width: calc(var(--column) - 2 * var(--pad));
+  opacity: 0.2;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.step.is-active .copy {
+  opacity: 1;
+  transform: none;
+}
+
+body.is-focused #story .copy {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/*
+ * The headline is two fixed lines sized to the column: (column - padding) / 7.9 fits
+ * "What's inside a" at Switzer 600 with this tracking, so neither line ever wraps.
+ */
+h1 {
+  font-weight: 600;
+  font-size: clamp(40px, calc((var(--column) - 2 * var(--pad)) / 7.9), 88px);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  margin-left: -0.04em;
+  margin-bottom: 28px;
+}
+
+.h1-line {
+  display: block;
+  white-space: nowrap;
+}
+
+h2 {
+  font-weight: 600;
+  font-size: var(--step-head);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+  text-wrap: balance;
+  max-width: 18ch;
+}
+
+.copy p {
+  max-width: 58ch;
+  text-wrap: pretty;
+}
+
+.copy p + p {
+  margin-top: 0.9em;
+}
+
+/*
+ * Chinese. Hei faces read smaller than Latin at the same size and need more leading, a touch of
+ * tracking and no negative tracking. 13px is too small for Chinese, so the small step goes up to 14px.
+ * Lines break only between words (see wrapPhrases in i18n.ts); headings balance their lines and
+ * paragraphs avoid a lone word on the last line.
+ */
+html:lang(zh) {
+  --step-small: 14px;
+  --step-body: clamp(16px, 0.98rem + 0.15vw, 17.5px);
+}
+
+html:lang(zh) body {
+  line-height: 1.75;
+}
+
+html.has-phrases:lang(zh) :is(.copy, .part-card, .progress__tip, .viewer-bar) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* The headline's two lines ("35 美元的行车记录仪" is the longer) fit the column at (column - padding) / 9.6. */
+html:lang(zh) h1 {
+  font-size: clamp(34px, calc((var(--column) - 2 * var(--pad)) / 9.6), 80px);
+  line-height: 1.18;
+  letter-spacing: 0;
+  margin-left: -0.02em;
+  margin-bottom: 26px;
+}
+
+html:lang(zh) h2 {
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  max-width: 13em;
+  margin-bottom: 18px;
+}
+
+html:lang(zh) .lead {
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+  max-width: 21em !important;
+}
+
+html:lang(zh) .copy p {
+  max-width: 25em;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+}
+
+html:lang(zh) .copy p.note {
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+
+html:lang(zh) .bom button {
+  font-weight: 400;
+}
+
+html:lang(zh) .slider {
+  font-size: var(--step-small);
+}
+
+html:lang(zh) .part-card h3 {
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+html:lang(zh) .part-card dd {
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+
+html:lang(zh) .part-card__spec strong {
+  line-height: 1.6;
+}
+
+html:lang(zh) .progress__tip {
+  line-height: 1.5;
+}
+
+.lead {
+  font-size: var(--step-lead);
+  line-height: 1.45;
+  max-width: 36ch !important;
+}
+
+.note {
+  font-size: var(--step-small);
+  color: var(--muted);
+}
+
+.copy--outro .note {
+  margin-top: 22px;
+}
+
+.credit {
+  margin-top: 28px !important;
+}
+
+.copy .button {
+  margin-top: 18px;
+}
+
+/* The opening line above the headline: what this is, in one phrase. */
+.kicker {
+  font-size: var(--step-small);
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+  margin-bottom: 16px;
+}
+
+/* How to use the page, under the legend. The gesture half only shows on phones (see below). */
+.cue {
+  margin-top: 22px;
+  font-size: var(--step-small);
+  color: var(--muted);
+}
+
+.cue__scroll::before {
+  content: '↓';
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--ink);
+}
+
+.cue__gesture.for-mouse,
+.cue__gesture.for-touch {
+  display: none;
+}
+
+/* "05 / 09 · Memory + storage" above each heading; phones only, where the dots have no names. */
+.chapter-tag {
+  display: none;
+  font-size: var(--step-small);
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 10px;
+}
+
+/* ---------- Parts list ---------- */
+
+.bom {
+  list-style: none;
+  margin: 18px 0 16px;
+  display: grid;
+  gap: 2px;
+}
+
+.bom button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font: 500 var(--step-body) / 1.2 var(--font);
+  color: var(--ink);
+  background: none;
+  border: 0;
+  padding: 8px 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bom button:hover > span:first-child,
+.bom button:focus-visible > span:first-child {
+  color: var(--accent);
+}
+
+.bom .basis {
+  justify-self: end;
+}
+
+/* ---------- Explode slider ---------- */
+
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0 6px;
+  font-size: var(--step-small);
+  color: var(--muted);
+}
+
+.slider .range {
+  flex: 1;
+}
+
+/* ---------- Part card (a floating dialog) ---------- */
+
+.part-card {
+  position: fixed;
+  left: 72px;
+  bottom: 28px;
+  z-index: 4;
+  width: min(380px, calc(100vw - 32px));
+  /* Never taller than the room between the top bar and the bottom edge; long content scrolls inside. */
+  max-height: calc(100vh - 92px);
+  max-height: calc(100dvh - 92px - var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  background: var(--ink);
+  color: var(--on-ink);
+  border-radius: 20px;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
+  animation: card-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.part-card[hidden] {
+  display: none;
+}
+
+.part-card__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 28px 28px 26px;
+  border-radius: inherit;
+  scrollbar-width: thin;
+  scrollbar-color: var(--on-ink-muted) transparent;
+}
+
+/* More to read below: the bottom edge fades instead of cutting a line in half. */
+.part-card.has-more .part-card__body {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+}
+
+/* Scrolled down: the top edge fades too, so text never runs under the close button. */
+.part-card.is-scrolled .part-card__body {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 76px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 76px);
+}
+
+.part-card.is-scrolled.has-more .part-card__body {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 76px, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 76px, #000 calc(100% - 40px), transparent);
+}
+
+.part-card h3:focus {
+  outline: none;
+}
+
+html.kbd .part-card h3:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.part-card.part-card--beside {
+  bottom: auto;
+  animation: none;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.part-card h3 {
+  font-weight: 600;
+  font-size: var(--step-head);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  padding-right: 40px;
+  text-wrap: balance;
+  hyphens: none;
+}
+
+.part-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: var(--step-small);
+  color: var(--src);
+}
+
+.part-card dl {
+  margin-top: 20px;
+}
+
+.part-card dt {
+  font-size: var(--step-small);
+  color: var(--on-ink-muted);
+  margin-top: 16px;
+}
+
+.part-card dt:first-child {
+  margin-top: 0;
+}
+
+.part-card dd {
+  font-size: 15px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.part-card__spec {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--on-ink-surface);
+  font-size: var(--step-small);
+  color: var(--on-ink-muted);
+}
+
+.part-card__spec strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--on-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.part-card__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--on-ink-surface);
+  color: var(--on-ink);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+  transition: background-color 0.15s ease;
+}
+
+.part-card__close:hover {
+  background: var(--accent);
+}
+
+.part-card__hint {
+  display: none;
+  margin-top: 16px;
+  font-size: var(--step-small);
+  color: var(--on-ink-muted);
+}
+
+.part-card--beside .part-card__hint {
+  display: block;
+}
+
+/* Touch screens have no Esc key, and the card's close button says the rest. */
+@media (hover: none) {
+  .part-card--beside .part-card__hint {
+    display: none;
+  }
+}
+
+/* ---------- Phones, and tablets held upright: model on top, text below ---------- */
+
+@media (max-width: 760px), (max-width: 1024px) and (orientation: portrait) {
+  :root {
+    --column: 100vw;
+    --pad: 16px;
+  }
+
+  .column {
+    display: none;
+  }
+
+  .topbar {
+    gap: 8px;
+    padding: calc(12px + var(--safe-top)) calc(16px + var(--safe-right)) 12px calc(16px + var(--safe-left));
+  }
+
+  .topbar__name {
+    font-size: 15px;
+  }
+
+  .button {
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 15px;
+  }
+
+  /* Over the model, above where the text sheet sits, so a dot never lands on the copy. */
+  .progress {
+    left: auto;
+    right: 2px;
+    top: 36%;
+    gap: 0;
+  }
+
+  .progress__tip {
+    display: none;
+  }
+
+  /* Phones: the toolbar is just the zoom and reset controls, tucked under the top bar on the right.
+     How to rotate and select is said once, at the end of the opening text. */
+  .viewer-bar {
+    top: calc(62px + var(--safe-top));
+    bottom: auto;
+    left: auto;
+    right: calc(16px + var(--safe-right));
+    transform: none;
+    gap: 10px;
+    padding: 4px;
+  }
+
+  body.is-focused .viewer-bar {
+    left: auto;
+  }
+
+  .viewer-bar__hint {
+    display: none;
+  }
+
+  .cue__gesture.for-mouse,
+  .cue__gesture.for-touch {
+    display: block;
+    margin-top: 4px;
+    padding-left: 18px;
+  }
+
+  @media (hover: none) {
+    .cue__gesture.for-mouse {
+      display: none;
+    }
+  }
+
+  @media (hover: hover) {
+    .cue__gesture.for-touch {
+      display: none;
+    }
+  }
+
+  .chapter-tag {
+    display: block;
+  }
+
+  .kicker {
+    margin-bottom: 12px;
+  }
+
+  .cue {
+    margin-top: 16px;
+  }
+
+  .zoom {
+    gap: 4px;
+  }
+
+  .zoom .range {
+    width: 84px;
+  }
+
+  .zoom__step {
+    width: 30px;
+    height: 30px;
+  }
+
+  .zoom output {
+    min-width: 40px;
+    padding-right: 6px;
+  }
+
+  /*
+   * The model always keeps at least the top --model-min of the screen. Short text sits at the bottom
+   * as before; longer text starts below that line and runs on past the fold instead of covering it.
+   */
+  .step {
+    --model-min: clamp(200px, 44svh, 460px);
+    align-items: flex-end;
+    justify-content: center;
+    padding: var(--model-min) 0 0;
+  }
+
+  /* Full-bleed white sheet with a soft top edge, so the model behind fades out under the text. */
+  .copy {
+    position: relative;
+    width: 100%;
+    padding: 28px calc(16px + var(--safe-right)) calc(32px + var(--safe-bottom)) calc(16px + var(--safe-left));
+    background: var(--bg);
+  }
+
+  .copy::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 56px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    pointer-events: none;
+  }
+
+  /* Leave room to see the exploded model before the long parts list. */
+  .step[data-step='7'] {
+    min-height: 140svh;
+  }
+
+  h1 {
+    font-size: calc((100vw - 32px) / 7.9);
+    margin-bottom: 16px;
+  }
+
+  html:lang(zh) h1 {
+    font-size: calc((100vw - 32px) / 9.6);
+  }
+
+  .topbar__end {
+    gap: 8px;
+  }
+
+  .lang button {
+    min-width: 40px;
+    min-height: 32px;
+    padding: 0 10px;
+  }
+
+  /* A bottom sheet that leaves the upper part of the screen to the part being inspected. */
+  .part-card,
+  .part-card.part-card--beside {
+    left: calc(16px + var(--safe-left));
+    right: calc(16px + var(--safe-right));
+    bottom: calc(16px + var(--safe-bottom));
+    width: auto;
+    max-height: min(54vh, calc(100vh - 190px));
+    max-height: min(54dvh, calc(100dvh - 190px - var(--safe-top) - var(--safe-bottom)));
+  }
+
+  .part-card__body {
+    padding: 22px 20px 20px;
+  }
+
+  .part-card dl {
+    margin-top: 16px;
+  }
+
+  .part-card__spec {
+    margin-top: 18px;
+  }
+}
+
+/* The phone toolbar drops the zoom track; the buttons and the percentage stay. */
+@media (max-width: 600px) {
+  .zoom .range {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy,
+  .label,
+  .button,
+  .column,
+  .viewer-bar,
+  .progress__tip {
+    transition: none;
+  }
+
+  .part-card {
+    animation: none;
+  }
+}

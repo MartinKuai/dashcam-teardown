@@ -1,0 +1,36 @@
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.cache/
+.turbo/
+*.tsbuildinfo
+*.log
+__pycache__/
+*.py[cod]
+
+# Credentials and machine-specific settings
+.env
+.env.*
+.npmrc
+.netrc
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+.claude/
+.workbuddy/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local verification artifacts
+e2e-runs/
+review/
+review-shots/
+playwright-report/
+test-results/
