@@ -1,0 +1,84 @@
+/* Dashcam teardown in the home page palette, with the site header.
+   Loaded after the app's own stylesheet. It re-points the app's colour tokens (the app's rules read them),
+   sets the link colour, and puts the site nav beside the wordmark. Fonts are unchanged (system stack).
+   Palette from src/assets/site.css: ground #F2F1EE, ink #1D1D1F, cobalt #3255A4 (links, accents),
+   orange #FF6B35 (small highlights only). Tints below are plain mixes of these. */
+
+:root {
+  --bg: #F2F1EE;               /* ground */
+  --surface: #E2E8F3;          /* field: the cobalt-tinted panel behind the viewer bar and the chips */
+  --ink: #1D1D1F;
+  --muted: #5D5D63;
+  --rule: #C9D4EA;             /* field-deep: the unfilled part of the sliders */
+  --dot: #B3C3E6;              /* line: idle chapter dots */
+  --accent: #3255A4;           /* cobalt: hover and focus fills, the current chapter */
+  --accent-ink: #FDFDFD;
+  --src-datasheet: #3255A4;
+  --src-reference: #3E3E44;
+  --src-design: #FF6B35;
+  --on-ink: #F2F1EE;
+  --on-ink-muted: #B4B4B9;
+  --on-ink-surface: #2E2E31;
+  --src-datasheet-on-ink: #9CABCD;
+  --src-reference-on-ink: #E2E1DE;
+  --src-design-on-ink: #FF6B35;
+}
+
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); }
+
+/* Links: cobalt at rest; on hover the ink colour with the home's orange underline. */
+a { color: var(--accent); }
+a:hover { color: var(--ink); text-decoration-color: var(--orange); }
+.part-card a { color: var(--src-datasheet-on-ink); }
+:root { --orange: #FF6B35; }
+
+/* Site header: the home page nav (.nav-list in src/assets/site.css) beside the wordmark. */
+.topbar__start {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 44px);
+  min-width: 0;
+  pointer-events: auto;
+}
+.topbar__name { color: var(--ink); }
+.site-nav { display: flex; align-items: center; gap: clamp(16px, 3vw, 44px); }
+.site-nav a {
+  position: relative;
+  display: block;
+  padding: 8px 0;
+  color: var(--ink);
+  font-size: var(--step-body);
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-nav a:hover,
+.site-nav a:focus-visible {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--orange);
+  text-decoration-thickness: 2px;
+  text-underline-offset: .5em;
+}
+/* A 44 px hit area, as for the other header controls; the visible link keeps its size. */
+.site-nav a::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+/* The nav is for the Chinese page only, for now (English copy and nav follow after the Chinese pass). */
+html:not(:lang(zh)) .site-nav { display: none; }
+
+/* Phones and portrait tablets: the app's header sizes. Up to 560 px only 作品 fits beside the wordmark,
+   the lang pair and the CTA; below 340 px the whole nav is hidden so the header stays on one row. */
+@media (width<=760px),(width<=1024px) and (orientation:portrait) {
+  .topbar__start { gap: 12px; }
+  .site-nav a { font-size: 15px; }
+}
+@media (width<=560px) { .site-nav a.site-nav__more { display: none; } }
+@media (width<=340px) { .site-nav { display: none; } }

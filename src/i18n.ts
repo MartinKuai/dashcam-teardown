@@ -66,7 +66,7 @@ const HEAD = {
 
 const CTA: Record<Lang, string> = {
   en: 'https://contra.com/martin_k_ned4llz9',
-  zh: '/zh/contact/',
+  zh: '/contact/',
 };
 
 /** Chinese innerHTML for every [data-i18n] element. */
@@ -245,7 +245,7 @@ function applyStatic() {
   }
   // The name goes to the home of the site this page lives in.
   const home = document.querySelector<HTMLAnchorElement>('.topbar__name');
-  if (home) home.href = lang === 'zh' ? '/zh/' : '/';
+  if (home) home.href = lang === 'zh' ? '/' : '/en/';
   document.documentElement.classList.remove('is-translating');
 }
 

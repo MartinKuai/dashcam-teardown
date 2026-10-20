@@ -7,24 +7,18 @@
     <meta name="description" content="An interactive 3D teardown of a V851S reference design for a 1440p dashcam in the $35 class, with every part tagged by its source." />
     <!-- Share cards (X, LinkedIn, chat apps). The image needs an absolute URL. -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://martinkuai.com/lab/dashcam-teardown/" />
+    <meta property="og:url" content="https://martinkuai.com/work/dashcam-teardown/" />
     <meta property="og:title" content="What's inside a $35 dashcam? An interactive 3D teardown" />
     <meta property="og:description" content="A V851S dashcam reference design you can take apart in the browser. Every part is tagged with its source." />
-    <meta property="og:image" content="https://martinkuai.com/lab/dashcam-teardown/og.jpg" />
+    <meta property="og:image" content="https://martinkuai.com/work/dashcam-teardown/og.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://api.fontshare.com" />
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-    <link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600&display=swap" rel="stylesheet" />
-    <!-- Chinese text: Noto Sans SC in real weights instead of the system Hei face's faked bold. Loaded without
-         blocking the page, so a reader who can't reach Google Fonts simply gets the system face. -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
     <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/site-theme.css" />
     <script>
       // A Chinese reader shouldn't see the English copy flash before src/i18n.ts swaps it in.
       try {
@@ -39,13 +33,21 @@
     <svg id="leaders" aria-hidden="true"></svg>
 
     <header class="topbar">
-      <a class="topbar__name" href="/">Martin Kuai</a>
+      <div class="topbar__start">
+        <a class="topbar__name" href="/">Martin Kuai</a>
+        <nav class="site-nav" aria-label="站点导航">
+          <a href="/work/">作品</a>
+          <a class="site-nav__more" href="/method/">方法</a>
+          <a class="site-nav__more" href="/about/">关于</a>
+          <a class="site-nav__more" href="/contact/">联系</a>
+        </nav>
+      </div>
       <div class="topbar__end">
         <div class="lang" role="group" data-i18n-label="lang" aria-label="Language">
           <button type="button" data-lang="en" lang="en" aria-pressed="true">EN</button>
           <button type="button" data-lang="zh" lang="zh-CN" aria-pressed="false">中文</button>
         </div>
-        <a class="button button--quiet" data-cta href="https://contra.com/martin_k_ned4llz9" target="_blank" rel="noopener"
+        <a class="button button--quiet" data-cta href="/contact/"
           ><span class="cta-long" data-i18n="work">Work with me</span><span class="cta-short" data-i18n="work-short">Hire me</span></a
         >
       </div>

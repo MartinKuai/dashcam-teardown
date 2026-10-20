@@ -32,3 +32,14 @@ Vite 的 `base` 在 `vite.config.ts`：开发为 `/`，构建和预览为 `/lab/
 `tools/` 保留原工程的辅助脚本。浏览器审查工具和 PCB 纹理生成工具可能需要额外的本机工具或输入文件；它们不参与 `npm run build`，本次未执行。
 
 `npm run sync` 面向原 Contra/personal-site 相邻目录布局，会替换目标目录内容。独立克隆本分支后，不要直接使用默认同步目标；若需验证复制，先显式设置 `LAB_TARGET` 到独立目录。本次未运行同步或部署。
+
+## 站点集成（分支 site-integration）
+
+以下修改把原先直接改在构建文件里的站点内容移回源码，覆盖上文关于路径和导航的说明。构建路径改为 `/work/dashcam-teardown/`，作品页在 martinkuai.com 的 `/work/` 下提供。
+
+- `vite.config.ts`：构建和预览的 `base` 改为 `/work/dashcam-teardown/`。
+- `index.html`：去掉 Fontshare 和 Google Fonts 的链接；og:url、og:image 改为 `/work/dashcam-teardown/`；加入站点顶栏（Martin Kuai，导航作品、方法、关于、联系）；行车记录仪的顶栏 CTA 指向 `/contact/`；引入 `src/site-theme.css`。内联的语言脚本没有改动。
+- `src/style.css`：`--font` 改为系统字体栈；末尾加入触控区（I02）和章节导航通道（R2-I01）的规则。
+- `src/i18n.ts`：中文的 CTA 指向 `/contact/`；顶栏名称中文回 `/`，英文回 `/en/`。
+- `src/textures.ts`：两处画布字体去掉 Switzer。
+- `src/site-theme.css`：首页配色（底色、墨色、钴蓝、橘色），顶栏导航样式。

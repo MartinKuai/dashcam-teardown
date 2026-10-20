@@ -28,9 +28,9 @@
   --src-reference-on-ink: #7fc9a1;
   --src-design-on-ink: #e9b868;
 
-  /* Switzer sets the Latin text and numbers; Chinese falls through to Noto Sans SC, then the system's Hei face. */
-  --font: 'Switzer', 'Noto Sans SC', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei',
-    'Noto Sans CJK SC', 'Source Han Sans SC', 'Helvetica Neue', Arial, sans-serif;
+  /* System font stack: no web fonts, so the page reads the same without Google or Fontshare. */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
+    "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
 
   --step-small: 13px;
   --step-body: clamp(16px, 0.95rem + 0.15vw, 17px);
@@ -1257,5 +1257,87 @@ html.kbd .part-card h3:focus-visible {
 
   .part-card {
     animation: none;
+  }
+}
+
+/* Touch targets (lab review I02): every control here has a hit area of at least 44 x 44 px.
+   A transparent ::after, centred on the control, grows the hit area; visible sizes are unchanged.
+   Where two hit areas would otherwise meet, spacing is opened (chapter nav, zoom buttons, language pair).
+   Range sliders: the box is 44 px tall with 10 px of padding above and below and matching negative
+   margins, so the track keeps its place. */
+.topbar__name,.button {
+  position:relative
+}
+.topbar__name::after,.button::after,.part-card__close::after,.label.is-live::after,.progress button::after,.lang button:after,.zoom__step:after {
+  content:"";
+  position:absolute;
+  inset:auto;
+  left:50%;
+  top:50%;
+  width:max(100%,44px);
+  height:max(100%,44px);
+  transform:translate(-50%,-50%)
+}
+.lang button+button {
+  margin-left:3px
+}
+a[data-source] {
+  position:relative
+}
+a[data-source]::after {
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:-14px;
+  bottom:-14px
+}
+.progress {
+  gap:19px
+}
+.bom button {
+  min-height:44px
+}
+.range {
+  box-sizing:content-box;
+  padding:10px 0;
+  margin:-10px 0
+}
+@media (width<=760px),(width<=1024px) and (orientation:portrait) {
+  .progress {
+    gap:19px;
+    top:calc(36% + 4px)
+  }
+  .zoom {
+    gap:15px
+  }
+}
+/* Chapter nav lane (lab review R2-I01): on phone and tablet widths the nav sits at the right edge, and the
+   story copy stops short of it. The nav is 10 px from the edge, so its 44 px hit areas end 1 px inside the
+   viewport. The copy keeps 49 px of right padding, so text and BOM badges stay 4 px clear of the nearest hit
+   area. The column's centre is at least 309 px from the top (plus the safe area), which keeps its top hit
+   area below the zoom bar's. The headlines are nowrap, so they shrink to fit the narrower column: the Latin
+   size keeps its ratio, and the Chinese size is 1/9.8 of the content width (was 1/9.6) for some slack. */
+@media (width<=760px),(width<=1024px) and (orientation:portrait) {
+  .progress {
+    right:calc(10px + var(--safe-right));
+    top:max(calc(36% + 4px), calc(309px + var(--safe-top)))
+  }
+  .copy {
+    padding-right:calc(49px + var(--safe-right))
+  }
+  h1 {
+    font-size:calc((100vw - 65px) * .126582)
+  }
+  html:lang(zh) h1 {
+    font-size:calc((100vw - 65px) * .102041)
+  }
+}
+/* At 360 px and narrower, the longest English part name and its source badge need 248 px plus the 12 px
+   column gap, which is more than the 255 px column at 320 px. A 6 px gap fits them, so the badge stays clear
+   of the chapter lane. */
+@media (width<=360px) {
+  .bom button {
+    gap:6px
   }
 }

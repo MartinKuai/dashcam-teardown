@@ -417,9 +417,9 @@ export function diagramBlockTexture(title: string, sub: string, fill: string, as
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const size = Math.min(120, (w - 80) / (title.length * 0.62));
-  ctx.font = `600 ${size}px Switzer, Arial, sans-serif`;
+  ctx.font = `600 ${size}px Arial, sans-serif`;
   ctx.fillText(title, w / 2, h / 2 - size * 0.45);
-  ctx.font = `400 ${size * 0.62}px Switzer, Arial, sans-serif`;
+  ctx.font = `400 ${size * 0.62}px Arial, sans-serif`;
   ctx.fillText(sub, w / 2, h / 2 + size * 0.6);
   return toTexture(c);
 }
