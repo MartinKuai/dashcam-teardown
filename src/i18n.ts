@@ -47,7 +47,7 @@ const UI = {
     bottomSide: '主板（背面）',
     show: (name: string) => `查看${name}`,
     kicker: (ref: string, source: string) => `${ref} · ${source}`,
-    chapter: (n: number, of: number, name: string) => `${String(n).padStart(2, '0')} / ${String(of).padStart(2, '0')} · ${name}`,
+    chapter: (_n: number, _of: number, name: string) => name,
   },
 };
 
@@ -74,8 +74,8 @@ const ZH: Record<string, string> = {
   'hint-long': '拖动旋转 · 点击零件看详情 · 双击复位',
   'hint-short': '拖动旋转 · 点击零件看详情',
   'hint-touch': '左右滑动旋转 · 点按零件看详情',
-  'work': '找我合作',
-  'work-short': '找我合作',
+  'work': '联系 Martin',
+  'work-short': '联系',
 
   'kicker': 'V851S 参考设计 · 约 35 美元档',
 
@@ -121,7 +121,7 @@ const ZH: Record<string, string> = {
   'apart': '拆开',
   'sources':
     '资料来源：<a data-source="allwinner" href="#" target="_blank" rel="noopener">全志 V851S</a> 数据手册（v1.2），以及开源项目 <a data-source="tinyvision" href="#" target="_blank" rel="noopener">TinyVision</a>（基于 V851SE）的原理图与 BOM。',
-  'credit': '我为硬件和 AI 产品做发布页和交互式演示，就像你正在看的这一页。',
+  'credit': '',
 
   'card-hint': '拖动可换个角度看，按 <kbd>Esc</kbd> 关闭。',
 };

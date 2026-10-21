@@ -128,3 +128,7 @@ html:not(:lang(zh)) .flow-nav { display: none; }
     padding-bottom: 56px;
   }
 }
+
+/* Chinese pages: no sales line and no closing button; the header keeps 联系 Martin and the work flow follows below. */
+html:lang(zh) .credit,
+html:lang(zh) a.button[data-cta]:not(.button--quiet) { display: none; }
