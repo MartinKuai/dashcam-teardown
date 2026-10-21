@@ -82,3 +82,49 @@ html:not(:lang(zh)) .site-nav { display: none; }
 }
 @media (width<=560px) { .site-nav a.site-nav__more { display: none; } }
 @media (width<=340px) { .site-nav { display: none; } }
+
+/* Work flow: the previous and the next piece, and the way back to all of them. It sits under the story
+   in the text column, so the three links line up with the copy above them. The links are ordinary <a>
+   elements; the text column has pointer-events: none, this row turns it back on. */
+.flow-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  min-width: min(var(--column), 100vw - 2 * var(--pad));
+  max-width: calc(var(--column) + var(--fade));
+  margin: 0 var(--pad) 0 auto;
+  padding-bottom: 80px;
+  pointer-events: auto;
+  font-size: var(--step-body);
+}
+.flow-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.flow-nav a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+/* The flow is for the Chinese page only, for now (the English copy follows after the Chinese pass). */
+html:not(:lang(zh)) .flow-nav { display: none; }
+
+/* Phones: one link per row, each a full 44 px tall target. */
+@media (width<=640px) {
+  .flow-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin: 0 var(--pad);
+    padding-bottom: 56px;
+  }
+}
